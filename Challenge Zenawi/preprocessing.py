@@ -3,7 +3,6 @@
 NLP tasks
 
 """
-
 import json, nltk, random, pickle, string
 random.seed(23)
 nltk.data.path.append("/home/<user>/nltk_data")
@@ -19,10 +18,7 @@ def clean_sequence(seq):
     """ Stemming, remove stopwords and punctuation from input sequence
 
     :param seq: [word]
-    :return: [word] - cleaned seq of words
-    
-    " seq is missing and I wonder how sould that be writen"
-   
+    :return: [word] - cleaned seq of words   
     """
     
     stemmer = LancasterStemmer()

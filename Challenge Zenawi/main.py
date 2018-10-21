@@ -39,8 +39,8 @@ def main():
     backend.clear_session()
     global X_train, y_train, X_test, y_test
 
-    # Parse and clean training data
-    data_path = os.path.join("data/", "data_intents.json")
+    # Parse and clean training data"
+    data_path = os.path.join("data/","data_intents.jason")
     words, classes, documents = parse_training_data(data_path)
     (X_train, y_train), (X_test, y_test) = create_datasets(words, classes,
                                                            documents)

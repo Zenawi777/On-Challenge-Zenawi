@@ -8,7 +8,7 @@ import pickle
 
 import numpy as np
 
-"from models import *"
+from models import *
 
 
 def train_best_models(trainset):
