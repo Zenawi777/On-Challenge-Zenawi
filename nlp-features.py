@@ -10,8 +10,7 @@ from sklearn import model_selection, preprocessing, linear_model, naive_bayes, m
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn import decomposition 
 # from textblob import TextBlob 
-from keras.models import Sequential
-from keras.preprocessing.text import Tokenizer
+
 
 import pandas, numpy, string
 from keras import layers, models, optimizers
@@ -121,71 +120,8 @@ random.shuffle(indices)
 train = meta[indices[:train_rows], :]
 test = meta[indices[train_rows:], :]
 # train = numpy.nan_to_num(train)
-'''
+
 # Run the regression and generate predictions for the test set.
 reg = Ridge(alpha=.1)
 reg.fit(train,train_y)
 predictions = reg.predict(test)
-'''
-
-classifier = LogisticRegression()
-classifier.fit(train, train_y)
-score = classifier.score(test, valid_y)
-
-print ("Test acurracy: ", score)
-
-
-# =============================================================================
-# building sequential model layer by layer 
-# =============================================================================
-
-input_dim = train.shape[1]
-model = Sequential ()
-model.add(layers.Dense(10, input_dim=input_dim, activation='relu'))
-model.add(layers.Dense(1, activation='sigmoid'))
-
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.summary()
-
-
-history = model.fit(train, train_y, epochs=20, verbose=False, validation_data=(test, valid_y), batch_size=10)
-
-
-
-loss, accuracy = model.evaluate(train, train_y, verbose=False)
-print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(test, valid_y, verbose=False)
-print("Testing Accuracy:  {:.4f}".format(accuracy))
-
-
-tokenizer = Tokenizer(num_words=5000)
-tokenizer.fit_on_texts(train_x)
-
-X_train = tokenizer.texts_to_sequences(train_x)
-X_test = tokenizer.texts_to_sequences(valid_x)
-
-vocab_size = len(tokenizer.word_index) + 1  # Adding 1 because of reserved 0 index
-
-
-embedding_dim = 6
-maxlen = 6
-
-model = Sequential()
-model.add(layers.Embedding(vocab_size, embedding_dim, input_length=maxlen))
-model.add(layers.Conv1D(128, 5, activation='relu'))
-model.add(layers.GlobalMaxPooling1D())
-model.add(layers.Dense(10, activation='relu'))
-model.add(layers.Dense(1, activation='sigmoid'))
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
-              metrics=['accuracy'])
-model.summary()
-
-history = model.fit(train, train_y, epochs=10, verbose=False,validation_data=(test, valid_y),batch_size=10)
-loss, accuracy = model.evaluate(train, train_y, verbose=False)
-print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(test, valid_y, verbose=False)
-print("Testing Accuracy:  {:.4f}".format(accuracy))
-
-
-
