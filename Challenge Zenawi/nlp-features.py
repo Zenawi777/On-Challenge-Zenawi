@@ -5,49 +5,35 @@ Created on Tue Oct 16 20:38:07 2018
 
 @author: ztw1e12
 """
-
-from sklearn import model_selection, preprocessing, linear_model, naive_bayes, metrics, svm
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn import decomposition 
+from sklearn import model_selection
 # from textblob import TextBlob 
 from keras.models import Sequential
 from keras.preprocessing.text import Tokenizer
-
 import pandas, numpy, string
-from keras import layers, models, optimizers
-from sklearn.linear_model import LogisticRegression
-
-
-from sklearn.linear_model import Ridge
+from keras import layers
 import random
 
 
-
-# load the dataset
-
+# Load dataset using pandas library as sentence and labels
 df = pandas.read_csv("sentiment labelled sentences/yelp_labelled.txt", names=['sentence', 'label'], sep="\t")
 
 
-# Splitting the data (sentence and labbels) into training and testing data 
-
+# Getting the the sentence and labels dataset from the loaded data
 sentences = df['sentence'].values
 y = df['label'].values
 
 
-# create a dataframe using texts and lables
+# Create a dataframe using texts and lables
 trainDF = pandas.DataFrame()
 trainDF['text'] = sentences
 trainDF['label'] = y
 
 
-
-# split the dataset into training and validation datasets 
+# Splitting the data into training and testing (validation) data sets
 train_x, valid_x, train_y, valid_y = model_selection.train_test_split(trainDF['text'], trainDF['label'])
 
 
-
-# Will be used to train models
-
+# NLP features for training models
 trainDF['char_count'] = trainDF['text'].apply(len)
 trainDF['word_count'] = trainDF['text'].apply(lambda x: len(x.split()))
 trainDF['word_density'] = trainDF['char_count'] / (trainDF['word_count']+1)
@@ -56,39 +42,7 @@ trainDF['title_word_count'] = trainDF['text'].apply(lambda x: len([wrd for wrd i
 trainDF['upper_case_word_count'] = trainDF['text'].apply(lambda x: len([wrd for wrd in x.split() if wrd.isupper()]))
 
 
-'''
-pos_family = {
-    'noun' : ['NN','NNS','NNP','NNPS'],
-    'pron' : ['PRP','PRP$','WP','WP$'],
-    'verb' : ['VB','VBD','VBG','VBN','VBP','VBZ'],
-    'adj' :  ['JJ','JJR','JJS'],
-    'adv' : ['RB','RBR','RBS','WRB']
-}
-
-
-# function to check and get the part of speech tag count of a words in a given sentence
-def check_pos_tag(x, flag):
-    cnt = 0
-    try:
-        wiki = TextBlob(x)
-        for tup in wiki.tags:
-            ppo = list(tup)[1]
-            if ppo in pos_family[flag]:
-                cnt += 1
-    except:
-        pass
-    return cnt
-
-trainDF['noun_count'] = trainDF['text'].apply(lambda x: check_pos_tag(x, 'noun'))
-trainDF['verb_count'] = trainDF['text'].apply(lambda x: check_pos_tag(x, 'verb'))
-trainDF['adj_count'] = trainDF['text'].apply(lambda x: check_pos_tag(x, 'adj'))
-trainDF['adv_count'] = trainDF['text'].apply(lambda x: check_pos_tag(x, 'adv'))
-trainDF['pron_count'] = trainDF['text'].apply(lambda x: check_pos_tag(x, 'pron'))
-'''
-
-
-
-# Our list of functions to apply.
+# List of functions to train model
 transform_functions = [
         trainDF['char_count'],
         trainDF['word_count'],
@@ -98,94 +52,61 @@ transform_functions = [
         trainDF['upper_case_word_count']
 ]
 
-# Apply each function and put the results into a list.
+
+# Applying each function and put the result into a list.
 columns = []
 for func in transform_functions:
     columns.append(func)
+  
     
-# Convert the meta features to a numpy array.
+# Convert the meta features to a numpy array and transposing the data.
 meta = numpy.asarray(columns).T
+
+print ('=====================================================================')
 
 print (meta)
 
+print ('=====================================================================')
 
+
+# Set a seed to get the same "random" shuffle every time
 train_rows = 750
-# Set a seed to get the same "random" shuffle every time.
 random.seed(1)
 
-# Shuffle the indices for the matrix.
+
+# Shuffling matrix indices  
 indices = list(range(meta.shape[0]))
 random.shuffle(indices)
 
-# Create train and test sets.
+
+# Create train and test data sets after shuffle
 train = meta[indices[:train_rows], :]
 test = meta[indices[train_rows:], :]
-# train = numpy.nan_to_num(train)
-'''
-# Run the regression and generate predictions for the test set.
-reg = Ridge(alpha=.1)
-reg.fit(train,train_y)
-predictions = reg.predict(test)
-'''
-
-classifier = LogisticRegression()
-classifier.fit(train, train_y)
-score = classifier.score(test, valid_y)
-
-print ("Test acurracy: ", score)
 
 
-# =============================================================================
-# building sequential model layer by layer 
-# =============================================================================
-
-input_dim = train.shape[1]
-model = Sequential ()
-model.add(layers.Dense(10, input_dim=input_dim, activation='relu'))
-model.add(layers.Dense(1, activation='sigmoid'))
-
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.summary()
-
-
-history = model.fit(train, train_y, epochs=20, verbose=False, validation_data=(test, valid_y), batch_size=10)
-
-
-
-loss, accuracy = model.evaluate(train, train_y, verbose=False)
-print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(test, valid_y, verbose=False)
-print("Testing Accuracy:  {:.4f}".format(accuracy))
-
-
+# Tokenizing the data set
 tokenizer = Tokenizer(num_words=5000)
 tokenizer.fit_on_texts(train_x)
-
 X_train = tokenizer.texts_to_sequences(train_x)
 X_test = tokenizer.texts_to_sequences(valid_x)
 
-vocab_size = len(tokenizer.word_index) + 1  # Adding 1 because of reserved 0 index
 
-
+# Building cnn model
+vocab_size = len(tokenizer.word_index) + 1  # 1 is added due the reserved index 0 
 embedding_dim = 6
 maxlen = 6
-
 model = Sequential()
 model.add(layers.Embedding(vocab_size, embedding_dim, input_length=maxlen))
-model.add(layers.Conv1D(128, 5, activation='relu'))
+model.add(layers.Conv1D(130, 5, activation='relu'))
 model.add(layers.GlobalMaxPooling1D())
 model.add(layers.Dense(10, activation='relu'))
 model.add(layers.Dense(1, activation='sigmoid'))
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
-              metrics=['accuracy'])
-model.summary()
-
-history = model.fit(train, train_y, epochs=10, verbose=False,validation_data=(test, valid_y),batch_size=10)
-loss, accuracy = model.evaluate(train, train_y, verbose=False)
-print("Training Accuracy: {:.4f}".format(accuracy))
-loss, accuracy = model.evaluate(test, valid_y, verbose=False)
-print("Testing Accuracy:  {:.4f}".format(accuracy))
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 
+# Training and testing the model
+profile = model.fit(train, train_y, epochs=15, verbose=True, validation_data=(test, valid_y), batch_size=15)
 
+# Evaluating model
+loss, accuracy = model.evaluate(train, train_y, verbose=True)
+loss, accuracy = model.evaluate(test, valid_y, verbose=True)
