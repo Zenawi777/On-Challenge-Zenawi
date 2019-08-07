@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov  4 18:40:04 2018
+Created on Sun Jun 16 00:11:42 2019
 
 @author: ztw1e12
 """
-import pandas as pd
 
-
-df = pd.read_json("data/data_intents.json")
 
 
